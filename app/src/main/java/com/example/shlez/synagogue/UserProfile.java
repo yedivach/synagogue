@@ -3,8 +3,11 @@ package com.example.shlez.synagogue;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -19,6 +22,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -26,8 +35,20 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.mvc.imagepicker.ImagePicker;
+import com.squareup.picasso.Picasso;
 
 import org.w3c.dom.Text;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  * Created by Shlez on 11/21/17.
@@ -37,8 +58,12 @@ public class UserProfile extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseUser mUser;
+    private StorageReference mStorageRef;
     private DatabaseReference mDatabase;
+    private StorageReference profileImageRef;
     final Context context = this;
+
+    int PLACE_PICKER_REQUEST = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +78,8 @@ public class UserProfile extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mUser = mAuth.getCurrentUser();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mStorageRef = FirebaseStorage.getInstance().getReference();
+        profileImageRef = mStorageRef.child("profile_images/" + mUser.getUid().substring(10) + ".jpg");
 
         updateProfileFields();
 
@@ -98,6 +125,25 @@ public class UserProfile extends AppCompatActivity {
 
         String user_id = mUser.getUid();
 
+        //        Set user_image profile image in circle imageview
+        ImageView profile_img = (ImageView) findViewById(R.id.img_profile_image);
+        DatabaseReference imageURL = mDatabase.child("prayer").child(user_id).child("imageURL");
+        profileImageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                mDatabase.child("prayer").child(mUser.getUid()).child("imageURL").setValue(uri.getPath().substring(10));
+                Picasso.with(UserProfile.this).load(uri).into(profile_img);
+                profile_img.setEnabled(false);
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d("ERROR", "Can't load existing image.");
+            }
+        });
+
+
         //        Set user_profile name in textview
         final TextView txt_name = (TextView) findViewById(R.id.txt_profile_name);
         DatabaseReference fname_value = mDatabase.child("prayer").child(user_id).child("name");
@@ -124,6 +170,7 @@ public class UserProfile extends AppCompatActivity {
                 if (phone != null && phone.length() > 0) {
                     txt_phone.setText(phone);
                     txt_phone.setTextColor(Color.BLACK);
+                    txt_phone.setEnabled(false);
                 }
             }
 
@@ -165,6 +212,27 @@ public class UserProfile extends AppCompatActivity {
             }
         });
 
+
+        //        Set user_address Address in textview
+        final TextView txt_address = (TextView) findViewById(R.id.txt_profile_address);
+        DatabaseReference address_value = mDatabase.child("prayer").child(user_id).child("address");
+        address_value.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String address = dataSnapshot.getValue(String.class);
+                if (address.length() > 0) {
+                    txt_address.setTextColor(Color.BLACK);
+                    txt_address.setText(address);
+                    txt_address.setEnabled(false);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("ERROR", "loadName:onCancelled", databaseError.toException());
+            }
+        });
     }
 
 
@@ -182,8 +250,7 @@ public class UserProfile extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (txt_phone.getText().length() > 0) {
                     clear.setVisibility(View.VISIBLE);
-                }
-                else {
+                } else {
                     clear.setVisibility(View.GONE);
                 }
             }
@@ -218,8 +285,7 @@ public class UserProfile extends AppCompatActivity {
                     txt_phone.setText(phone);
                     txt_phone.setTextColor(Color.BLACK);
                     dialog.dismiss();
-                }
-                else {
+                } else {
                     Toast.makeText(UserProfile.this, "Phone Number is not valid", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -230,10 +296,79 @@ public class UserProfile extends AppCompatActivity {
     }
 
 
+    public void showSetLocationPicker(View v) {
+
+        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+
+        try {
+            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+        } catch (GooglePlayServicesRepairableException e) {
+            e.printStackTrace();
+        } catch (GooglePlayServicesNotAvailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+//        PlacePicker on get location
+        if (requestCode == PLACE_PICKER_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlacePicker.getPlace(UserProfile.this, data);
+                CharSequence address = place.getAddress();
+                mDatabase.child("prayer").child(mUser.getUid()).child("address").setValue(address);
+                String toastMsg = String.format("Place: %s", place.getName());
+                Toast.makeText(UserProfile.this, toastMsg, Toast.LENGTH_LONG).show();
+                TextView txt_address = (TextView) findViewById(R.id.txt_profile_address);
+                txt_address.setText(address);
+                txt_address.setTextColor(Color.BLACK);
+            }
+        }
+//        ImagePicker on get image
+        else {
+            ImagePicker.setMinQuality(600, 600);
+            Bitmap bitmap = ImagePicker.getImageFromResult(this, requestCode, resultCode, data);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] imageData = baos.toByteArray();
+
+            UploadTask uploadTask = profileImageRef.putBytes(imageData);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                    ImageView profile_img = (ImageView) findViewById(R.id.img_profile_image);
+                    mDatabase.child("prayer").child(mUser.getUid()).child("imageURL").setValue(downloadUrl.getPath().substring(10));
+                    Picasso.with(UserProfile.this).load(downloadUrl).into(profile_img);
+                }
+            });
+        }
+    }
+
+    public void imagePicker(View view) {
+        // Click on image button
+        ImagePicker.pickImage(this, "Select your image:");
+    }
+
+
     //    Go to MainActivity upon signing out
     public void launchMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onBackPressed() {
+
     }
 
 }

@@ -15,7 +15,8 @@ public class Prayer implements Serializable {
     String email;
     String name;
     String birthday;
-    Address addr;
+    String address;
+    String imageURL;
 
 
 //    Parameterless Constructor
@@ -42,9 +43,13 @@ public class Prayer implements Serializable {
     public void setBirthday(String birthday) { this.birthday= birthday; }
 
 
-////    Address - Getter & Setter
-//    public Address getAddr() { return addr; }
-//    public void setAddr(Address addr) { this.addr = addr; }
+//    Address - Getter & Setter
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
+
+//    ImageURL - Getter & Setter
+    public String getImageURL() { return imageURL; }
+    public void setImageURL(String imageURL) { this.imageURL = imageURL; }
 
 }

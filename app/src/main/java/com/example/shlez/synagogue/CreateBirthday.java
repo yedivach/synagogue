@@ -14,6 +14,7 @@ import android.app.DatePickerDialog;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -64,10 +65,17 @@ public class CreateBirthday extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 TextView lbl_birthday = (TextView) findViewById(R.id.lbl_create_birthday);
-                prayer.setBirthday(lbl_birthday.getText().toString());
-                prayer.setPhone("");
-                mDatabase.child("prayer").child(mUser.getUid()).setValue(prayer);
-                updateUI();
+                if (lbl_birthday.getText() != "") {
+                    prayer.setBirthday(lbl_birthday.getText().toString());
+                    prayer.setPhone("");
+                    prayer.setImageURL("");
+                    prayer.setAddress("");
+                    mDatabase.child("prayer").child(mUser.getUid()).setValue(prayer);
+                    updateUI();
+                }
+                else {
+                    Toast.makeText(CreateBirthday.this, "Tell us when you were born", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -84,13 +92,9 @@ public class CreateBirthday extends AppCompatActivity {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState){
-            final Calendar calendar = Calendar.getInstance();
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
 
             DatePickerDialog datepickerdialog = new DatePickerDialog(getActivity(),
-                    AlertDialog.THEME_HOLO_LIGHT,this,year,month,day);
+                    AlertDialog.THEME_HOLO_LIGHT,this,2000, 00, 01);
 
             return datepickerdialog;
         }
