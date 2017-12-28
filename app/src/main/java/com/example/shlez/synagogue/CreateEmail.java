@@ -1,8 +1,10 @@
 package com.example.shlez.synagogue;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
@@ -31,6 +33,7 @@ public class CreateEmail extends AppCompatActivity {
 
 
     private static final String TAG = "CreateEmail";
+    private Prayer prayer;
 
     @Override
     protected  void onCreate(Bundle savedInstanceState) {
@@ -40,6 +43,9 @@ public class CreateEmail extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_create_email);
         toolbar.setTitle("Create Account");
         setSupportActionBar(toolbar);
+
+
+        prayer = (Prayer) getIntent().getSerializableExtra("prayer");
 
         final TextView txt_email = (TextView) findViewById(R.id.txt_create_email);
         final Button button = (Button) findViewById(R.id.btn_clear_txt_email);
@@ -80,10 +86,8 @@ public class CreateEmail extends AppCompatActivity {
 
                 boolean validEmail = Validations.isValidEmail(email);
                 if (validEmail) {
-                    Bundle bundle = new Bundle();
-                    bundle.putString("email", email);
-
-                    updateUI(bundle);
+                    prayer.setEmail(email);
+                    updateUI(prayer);
                 }
                 else {
                     Toast.makeText(CreateEmail.this, "Email is not valid", Toast.LENGTH_SHORT).show();
@@ -96,11 +100,38 @@ public class CreateEmail extends AppCompatActivity {
     }
 
 
-    public void updateUI(Bundle bundle) {
-        Intent intent = new Intent(this, CreatePassword.class);
-        intent.putExtras(bundle);
+    @Override
+    public void onBackPressed() {
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        updateUI(MainActivity.class);
 
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        break;
+                }
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you sure you want to cancel account creation?").setPositiveButton("Yes", dialogClickListener)
+                .setNegativeButton("No", dialogClickListener).show();
+    }
+
+
+    public void updateUI(Prayer prayer) {
+        Intent intent = new Intent(this, CreatePassword.class);
+        intent.putExtra("prayer", prayer);
         startActivity(intent);
     }
 
+
+    //    Pass Intent to given class
+    public void updateUI(Class<?> class_name) {
+        Intent intent = new Intent(this, class_name);
+        startActivity(intent);
+    }
 }
+

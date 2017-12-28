@@ -21,6 +21,9 @@ import mehdi.sakout.aboutpage.Element;
 
 public class AboutUs extends AppCompatActivity {
 
+
+    private static final String TAG = "AboutUs";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

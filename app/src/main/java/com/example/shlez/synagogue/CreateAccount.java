@@ -65,7 +65,7 @@ public class CreateAccount extends AppCompatActivity {
 
 
     public void updateUI() {
-           Intent intent = new Intent(this, CreateEmail.class);
+           Intent intent = new Intent(this, CreateName.class);
            startActivity(intent);
     }
 
