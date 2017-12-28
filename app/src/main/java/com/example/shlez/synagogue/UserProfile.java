@@ -56,6 +56,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class UserProfile extends AppCompatActivity {
 
+
+    private static final String TAG = "UserProfile";
     private FirebaseAuth mAuth;
     private FirebaseUser mUser;
     private StorageReference mStorageRef;
@@ -127,11 +129,15 @@ public class UserProfile extends AppCompatActivity {
 
         //        Set user_image profile image in circle imageview
         ImageView profile_img = (ImageView) findViewById(R.id.img_profile_image);
-        DatabaseReference imageURL = mDatabase.child("prayer").child(user_id).child("imageURL");
+        DatabaseReference imageURL = mDatabase.child("database").child("prayer").child(user_id).child("imageURL");
         profileImageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
-                mDatabase.child("prayer").child(mUser.getUid()).child("imageURL").setValue(uri.getPath().substring(10));
+                String full_image_path = uri.getPath();
+                int index = full_image_path.indexOf("/profile_images/");
+                String short_image_path = full_image_path.substring(index);
+
+                mDatabase.child("database").child("prayer").child(mUser.getUid()).child("imageURL").setValue(short_image_path);
                 Picasso.with(UserProfile.this).load(uri).into(profile_img);
                 profile_img.setEnabled(false);
 
@@ -139,14 +145,14 @@ public class UserProfile extends AppCompatActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                Log.d("ERROR", "Can't load existing image.");
+                Log.d(TAG, "Can't load existing image.");
             }
         });
 
 
         //        Set user_profile name in textview
         final TextView txt_name = (TextView) findViewById(R.id.txt_profile_name);
-        DatabaseReference fname_value = mDatabase.child("prayer").child(user_id).child("name");
+        DatabaseReference fname_value = mDatabase.child("database").child("prayer").child(user_id).child("name");
         fname_value.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -155,14 +161,14 @@ public class UserProfile extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.w("ERROR", "loadName:onCancelled", databaseError.toException());
+                Log.w(TAG, "loadName:onCancelled", databaseError.toException());
             }
         });
 
 
         //        Set user_profile phone in textview
         final TextView txt_phone = (TextView) findViewById(R.id.txt_profile_phone);
-        DatabaseReference phone_value = mDatabase.child("prayer").child(user_id).child("phone");
+        DatabaseReference phone_value = mDatabase.child("database").child("prayer").child(user_id).child("phone");
         phone_value.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -176,14 +182,14 @@ public class UserProfile extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.w("ERROR", "loadName:onCancelled", databaseError.toException());
+                Log.w(TAG, "loadName:onCancelled", databaseError.toException());
             }
         });
 
 
         //        Set user_profile email in textview
         final TextView txt_email = (TextView) findViewById(R.id.txt_profile_email);
-        DatabaseReference email_value = mDatabase.child("prayer").child(user_id).child("email");
+        DatabaseReference email_value = mDatabase.child("database").child("prayer").child(user_id).child("email");
         email_value.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -192,14 +198,14 @@ public class UserProfile extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.w("ERROR", "loadName:onCancelled", databaseError.toException());
+                Log.w(TAG, "loadName:onCancelled", databaseError.toException());
             }
         });
 
 
         //        Set user_profile birthday in textview
         final TextView txt_birthday = (TextView) findViewById(R.id.txt_profile_birthday);
-        DatabaseReference birthday_value = mDatabase.child("prayer").child(user_id).child("birthday");
+        DatabaseReference birthday_value = mDatabase.child("database").child("prayer").child(user_id).child("birthday");
         birthday_value.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -208,14 +214,14 @@ public class UserProfile extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.w("ERROR", "loadName:onCancelled", databaseError.toException());
+                Log.w(TAG, "loadName:onCancelled", databaseError.toException());
             }
         });
 
 
         //        Set user_address Address in textview
         final TextView txt_address = (TextView) findViewById(R.id.txt_profile_address);
-        DatabaseReference address_value = mDatabase.child("prayer").child(user_id).child("address");
+        DatabaseReference address_value = mDatabase.child("database").child("prayer").child(user_id).child("address");
         address_value.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -230,7 +236,7 @@ public class UserProfile extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.w("ERROR", "loadName:onCancelled", databaseError.toException());
+                Log.w(TAG, "loadName:onCancelled", databaseError.toException());
             }
         });
     }
@@ -281,7 +287,7 @@ public class UserProfile extends AppCompatActivity {
             public void onClick(View v) {
                 String phone = ((TextView) dialog.findViewById(R.id.txt_create_phone_number)).getText().toString();
                 if (phone.length() == 10) {
-                    mDatabase.child("prayer").child(mUser.getUid()).child("phone").setValue(phone);
+                    mDatabase.child("database").child("prayer").child(mUser.getUid()).child("phone").setValue(phone);
                     txt_phone.setText(phone);
                     txt_phone.setTextColor(Color.BLACK);
                     dialog.dismiss();
@@ -318,9 +324,7 @@ public class UserProfile extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 Place place = PlacePicker.getPlace(UserProfile.this, data);
                 CharSequence address = place.getAddress();
-                mDatabase.child("prayer").child(mUser.getUid()).child("address").setValue(address);
-                String toastMsg = String.format("Place: %s", place.getName());
-                Toast.makeText(UserProfile.this, toastMsg, Toast.LENGTH_LONG).show();
+                mDatabase.child("database").child("prayer").child(mUser.getUid()).child("address").setValue(address);
                 TextView txt_address = (TextView) findViewById(R.id.txt_profile_address);
                 txt_address.setText(address);
                 txt_address.setTextColor(Color.BLACK);
@@ -331,26 +335,33 @@ public class UserProfile extends AppCompatActivity {
             ImagePicker.setMinQuality(600, 600);
             Bitmap bitmap = ImagePicker.getImageFromResult(this, requestCode, resultCode, data);
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] imageData = baos.toByteArray();
+            if (bitmap != null) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                byte[] imageData = baos.toByteArray();
 
-            UploadTask uploadTask = profileImageRef.putBytes(imageData);
-            uploadTask.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
+                UploadTask uploadTask = profileImageRef.putBytes(imageData);
+                uploadTask.addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
 
-                }
-            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                    ImageView profile_img = (ImageView) findViewById(R.id.img_profile_image);
-                    mDatabase.child("prayer").child(mUser.getUid()).child("imageURL").setValue(downloadUrl.getPath().substring(10));
-                    Picasso.with(UserProfile.this).load(downloadUrl).into(profile_img);
-                }
-            });
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                        ImageView profile_img = (ImageView) findViewById(R.id.img_profile_image);
+
+                        String full_image_path = downloadUrl.getPath();
+                        int index = full_image_path.indexOf("/profile_images/");
+                        String short_image_path = full_image_path.substring(index);
+
+                        mDatabase.child("database").child("prayer").child(mUser.getUid()).child("imageURL").setValue(short_image_path);
+                        Picasso.with(UserProfile.this).load(downloadUrl).into(profile_img);
+                    }
+                });
+            }
         }
     }
 

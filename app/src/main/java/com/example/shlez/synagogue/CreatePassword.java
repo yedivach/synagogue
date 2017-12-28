@@ -1,8 +1,10 @@
 package com.example.shlez.synagogue;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
@@ -20,6 +22,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 /**
  * Created by Shlez on 11/24/17.
@@ -29,7 +32,10 @@ public class CreatePassword extends AppCompatActivity {
 
     private static final String TAG = "CreatePassword";
     private FirebaseAuth mAuth;
+    private FirebaseUser mUser;
+    private DatabaseReference mDatabase;
     private Prayer prayer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,12 +47,12 @@ public class CreatePassword extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         mAuth = FirebaseAuth.getInstance();
-        prayer = new Prayer();
+        prayer = (Prayer) getIntent().getSerializableExtra("prayer");
 
 /*        if 'email' recieved from intent extras by CreateEmail if not null,
           registration continues.
           */
-        final String email = getIntent().getExtras().getString("email");
+        final String email = prayer.getEmail();
         if (email != null) {
 
             final TextView txt_password = (TextView) findViewById(R.id.txt_create_password);
@@ -108,10 +114,28 @@ public class CreatePassword extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onBackPressed() {
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        updateUI(MainActivity.class);
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        break;
+                }
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you sure you want to cancel account creation?").setPositiveButton("Yes", dialogClickListener)
+                .setNegativeButton("No", dialogClickListener).show();
+    }
+
+
     public void createAccount(String email, String password) {
-
-        prayer.setEmail(email);
-
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -119,17 +143,18 @@ public class CreatePassword extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "createUserWithEmail:success");
-                            String email = mAuth.getCurrentUser().getEmail();
-//                            Toast.makeText(CreatePassword.this, email + " has been created successfully.",
-//                                    Toast.LENGTH_SHORT).show();
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            updateUI(user);
+                            Toast.makeText(CreatePassword.this, prayer.getEmail() + " has been created successfully.",
+                                    Toast.LENGTH_SHORT).show();
+                            mUser = mAuth.getCurrentUser();
+                            mDatabase = FirebaseDatabase.getInstance().getReference();
+                            mDatabase.child("database").child("prayer").child(mUser.getUid()).setValue(prayer);
+                            updateUI();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
                             Toast.makeText(CreatePassword.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-                            updateUI(null);
+                            updateUI(MainActivity.class);
                         }
 
                         // ...
@@ -139,12 +164,16 @@ public class CreatePassword extends AppCompatActivity {
     }
 
 
-    public void updateUI(FirebaseUser user) {
-        if (user != null) {
-            Intent intent = new Intent(this, CreateName.class);
-            intent.putExtra("prayer", prayer);
-            startActivity(intent);
-        }
+    public void updateUI() {
+        Intent intent = new Intent(this, UserProfile.class);
+        startActivity(intent);
     }
 
+
+    //    Pass Intent to given class
+    public void updateUI(Class<?> class_name) {
+        Intent intent = new Intent(this, class_name);
+        startActivity(intent);
+    }
 }
+
