@@ -1,27 +1,29 @@
 package com.example.shlez.synagogue;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.support.v7.widget.Toolbar;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 /**
  * Created by Shlez on 11/20/17.
@@ -32,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
+    private String isGabay ="";
 
 
     @Override
@@ -44,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         mAuth = FirebaseAuth.getInstance();
-
+        mDatabase = FirebaseDatabase.getInstance().getReference();
 
 
         final TextView txt_email = (TextView) findViewById(R.id.txt_input_email);
@@ -224,8 +228,33 @@ public class MainActivity extends AppCompatActivity {
     //    Update User Interface to UserProfile upon sign-in / signed-in
     public void updateUI(FirebaseUser user) {
         if (user != null) {
-            Intent intent = new Intent(this, UserProfile.class);
-            startActivity(intent);
+
+             DatabaseReference gabay_reference =   mDatabase.getDatabase().getReference().child("database").child("prayer").child(mAuth.getUid()).child("isGabay");
+             gabay_reference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    isGabay = dataSnapshot.getValue(String.class);
+                   // Log.d(TAG, isGabay);
+
+                    Intent intent = null;
+                    if(isGabay != null && isGabay.equals("true")) {
+                        intent = new Intent(MainActivity.this, GabayPage.class);
+                    }
+                    else{
+                        intent = new Intent(MainActivity.this, UserProfile.class);
+                    }
+                    startActivity(intent);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+
+
         }
     }
 

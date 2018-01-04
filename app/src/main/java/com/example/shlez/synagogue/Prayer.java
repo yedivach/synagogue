@@ -1,9 +1,6 @@
 package com.example.shlez.synagogue;
 
-import android.location.Address;
-
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * Created by Shlez on 11/23/17.
@@ -11,13 +8,13 @@ import java.util.Date;
 
 public class Prayer implements Serializable {
 
-    String phone;
-    String email;
-    String name;
-    String birthday;
-    String address;
-    String imageURL;
-
+    private String phone;
+    private String email;
+    private String name;
+    private String birthday;
+    private String address;
+    private String imageURL;
+    private String isGabay = "false";
 
 //    Parameterless Constructor
     public Prayer () {}
@@ -51,5 +48,12 @@ public class Prayer implements Serializable {
 //    ImageURL - Getter & Setter
     public String getImageURL() { return imageURL; }
     public void setImageURL(String imageURL) { this.imageURL = imageURL; }
+
+// Is Gabay *NO SET*
+    public String getIsGabay(){
+        return this.isGabay;
+    }
+
+
 
 }

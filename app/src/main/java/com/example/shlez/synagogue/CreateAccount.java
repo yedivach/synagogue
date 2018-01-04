@@ -37,7 +37,8 @@ public class CreateAccount extends AppCompatActivity {
         toolbar.setTitle("Create Account");
         setSupportActionBar(toolbar);
 
-        AppCompatButton register = (AppCompatButton) findViewById(R.id.btn_create_account);
+
+         register = (AppCompatButton) findViewById(R.id.btn_create_account);
         register.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 updateUI();

@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "375273963859-37u4s66rt9ij0o1533m0h98aklkqcgt8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.shlez.synagogue",
+            "certificate_hash": "02f8c84c41d2fcbd4314c1ee20d7645c60370b42"
+          }
+        },
+        {
+          "client_id": "375273963859-atjg2au8s9lfq9js14amilrbrklcddgr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.shlez.synagogue",
+            "certificate_hash": "ba5a077a7ab59903b01c40b32562a9b104afefe6"
+          }
+        },
+        {
           "client_id": "375273963859-kctegbmem1v7062tr7n1i85jqrs3h8v7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

@@ -27,6 +27,7 @@
             android:name=".CreateAccount"
             android:label="Create Account" />
         <activity
+
             android:name=".CreateEmail"
             android:label="Create Account" />
         <activity
@@ -48,6 +49,15 @@
             android:name=".AboutUs"
             android:label="About Us"
             android:theme="@style/AppTheme"/>
+        <activity
+            android:name=".GabayPage"
+            android:label="GabayPage" />
+        <activity
+            android:name=".ShowEvent"
+            android:label="ShowEvent" />
+        <activity
+            android:name=".CreateEvent"
+            android:label="CreateEvent" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
